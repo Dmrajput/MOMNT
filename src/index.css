@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #08080d;
+  --color-bg-secondary: #0d0d14;
+  --color-card: #11111a;
+  --color-card-elevated: #151521;
+  --color-text: #ffffff;
+  --color-text-secondary: #a7a7b3;
+  --color-text-muted: #70707c;
+  --color-border: #282532;
+  --color-pink: #ff2d8d;
+  --color-orange: #ff6845;
+  --color-purple: #9b4dff;
+  --color-success: #32e6a1;
+  --color-danger: #ff4d67;
+  --gradient-cta: linear-gradient(90deg, #ff6845, #ff2d8d);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-hero: 20px;
+  --header-height: 72px;
+  --container: 1280px;
+}
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --color-bg: #08080d;
+  --color-bg-secondary: #0d0d14;
+  --color-card: #11111a;
+  --color-card-elevated: #151521;
+  --color-text: #ffffff;
+  --color-text-secondary: #a7a7b3;
+  --color-text-muted: #70707c;
+  --color-border: #282532;
+  --color-pink: #ff2d8d;
+  --color-orange: #ff6845;
+  --color-purple: #9b4dff;
+  --color-success: #32e6a1;
+  --color-danger: #ff4d67;
+  --color-warning: #ffb84d;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: clip;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 52% 40% at 100% -10%, rgba(155, 77, 255, 0.1), transparent 60%),
+    radial-gradient(ellipse 36% 28% at 78% 18%, rgba(255, 45, 141, 0.07), transparent 55%);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(255, 45, 141, 0.35);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 3px;
+}
+
+.text-gradient {
+  background-image: var(--gradient-cta);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2833;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
