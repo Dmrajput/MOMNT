@@ -9,6 +9,8 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest(path, { method = "GET", body, headers } = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
   let response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
@@ -19,9 +21,12 @@ export async function apiRequest(path, { method = "GET", body, headers } = {}) {
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
     });
   } catch {
     throw new ApiError("NETWORK", "Unable to connect to MOMNT. Please try again.");
+  } finally {
+    clearTimeout(timer);
   }
 
   const payload = await response.json().catch(() => null);

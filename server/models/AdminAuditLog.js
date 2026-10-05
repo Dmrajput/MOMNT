@@ -12,4 +12,6 @@ const adminAuditLogSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now, index: true },
 });
 
+adminAuditLogSchema.index({ resourceId: 1, createdAt: -1 });
+
 export default mongoose.model("AdminAuditLog", adminAuditLogSchema);

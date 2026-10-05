@@ -1,3 +1,5 @@
+import { logEvent, redact } from "../utils/logger.js";
+
 export function errorHandler(error, req, res, next) {
   if (res.headersSent) {
     next(error);
@@ -28,14 +30,19 @@ export function errorHandler(error, req, res, next) {
   }
 
   const status = error.status || 500;
-  const code = error.code || "SERVER_ERROR";
+  const code = status >= 500 && (!error.code || error.code === "SERVER_ERROR") ? "INTERNAL_SERVER_ERROR" : error.code || "SERVER_ERROR";
   const message =
     status >= 500
       ? "Something went wrong. Please try again."
       : error.message || "Please check the details and try again.";
 
   if (status >= 500) {
-    console.error(JSON.stringify({ code, status, message: error.message, at: new Date().toISOString() }));
+    logEvent("error", {
+      requestId: req.id,
+      code,
+      status,
+      message: redact(error.message),
+    });
   }
 
   res.status(status).json({

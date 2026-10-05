@@ -260,6 +260,8 @@ export function settingsView() {
     currency: "INR",
     upiDisplayName: payment.upi.name,
     paymentExpiryMinutes: payment.expiryMinutes,
+    environment: process.env.NODE_ENV === "production" || process.env.NODE_ENV === "staging" ? process.env.NODE_ENV : "development",
+    version: "1.0.0",
   };
 }
 

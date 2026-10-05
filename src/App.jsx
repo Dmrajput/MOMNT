@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { BookingProvider } from "./context/BookingContext";
 import { PaymentProvider } from "./context/PaymentContext";
@@ -23,22 +23,24 @@ import TicketValidation from "./pages/TicketValidation";
 import { AdminAuthProvider, useAdminAuth } from "./admin/context/AdminAuthContext";
 import AdminLayout from "./admin/components/AdminLayout";
 import AdminLogin from "./admin/pages/AdminLogin";
-import Dashboard from "./admin/pages/Dashboard";
-import AdminEvents from "./admin/pages/Events";
-import AdminEventDetails from "./admin/pages/EventDetails";
-import AdminBookings from "./admin/pages/Bookings";
-import AdminBookingDetails from "./admin/pages/BookingDetails";
-import AdminPayments from "./admin/pages/Payments";
-import AdminPaymentDetails from "./admin/pages/PaymentDetails";
-import AdminTickets from "./admin/pages/Tickets";
-import AdminTicketDetails from "./admin/pages/TicketDetails";
-import AdminCustomers from "./admin/pages/Customers";
-import AdminCustomerDetails from "./admin/pages/CustomerDetails";
-import CheckIn from "./admin/pages/CheckIn";
-import Reports from "./admin/pages/Reports";
-import Settings from "./admin/pages/Settings";
-import AdminProfile from "./admin/pages/AdminProfile";
+import AccessDenied from "./admin/pages/AccessDenied";
 import { homeFromAccess } from "./admin/utils/adminHelpers";
+
+const Dashboard = lazy(() => import("./admin/pages/Dashboard"));
+const AdminEvents = lazy(() => import("./admin/pages/Events"));
+const AdminEventDetails = lazy(() => import("./admin/pages/EventDetails"));
+const AdminBookings = lazy(() => import("./admin/pages/Bookings"));
+const AdminBookingDetails = lazy(() => import("./admin/pages/BookingDetails"));
+const AdminPayments = lazy(() => import("./admin/pages/Payments"));
+const AdminPaymentDetails = lazy(() => import("./admin/pages/PaymentDetails"));
+const AdminTickets = lazy(() => import("./admin/pages/Tickets"));
+const AdminTicketDetails = lazy(() => import("./admin/pages/TicketDetails"));
+const AdminCustomers = lazy(() => import("./admin/pages/Customers"));
+const AdminCustomerDetails = lazy(() => import("./admin/pages/CustomerDetails"));
+const CheckIn = lazy(() => import("./admin/pages/CheckIn"));
+const Reports = lazy(() => import("./admin/pages/Reports"));
+const Settings = lazy(() => import("./admin/pages/Settings"));
+const AdminProfile = lazy(() => import("./admin/pages/AdminProfile"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -109,9 +111,9 @@ function AdminGate({ anyOf, children }) {
   if (!ready) return <div className="min-h-screen bg-bg" />;
   if (!admin) return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   if (anyOf && !anyOf.some((key) => admin.access?.includes(key))) {
-    return <Navigate to={homeFromAccess(admin.access)} replace />;
+    return <AccessDenied />;
   }
-  return children;
+  return <Suspense fallback={<div className="min-h-40 animate-pulse rounded-2xl bg-white/5" />}>{children}</Suspense>;
 }
 
 export default function App() {

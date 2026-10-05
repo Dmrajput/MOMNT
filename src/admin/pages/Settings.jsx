@@ -11,6 +11,8 @@ const LABELS = [
   ["currency", "Default Currency"],
   ["upiDisplayName", "UPI Display Name"],
   ["paymentExpiryMinutes", "Payment Expiry"],
+  ["environment", "Environment"],
+  ["version", "Version"],
 ];
 
 export default function Settings() {

@@ -2,8 +2,9 @@ import { Router } from "express";
 import { z } from "zod";
 import { getPaymentStatus, postBooking } from "../controllers/bookingController.js";
 import { showBookingTicket } from "../controllers/ticketController.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { createBookingLimiter } from "../middleware/rateLimits.js";
 import { validateRequest } from "../middleware/validateRequest.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const router = Router();
 
@@ -32,7 +33,7 @@ const statusSchema = z.object({
   query: z.object({}).optional().default({}),
 });
 
-router.post("/", validateRequest(createBookingSchema), asyncHandler(postBooking));
+router.post("/", createBookingLimiter, validateRequest(createBookingSchema), asyncHandler(postBooking));
 router.get("/:bookingId/payment-status", validateRequest(statusSchema), asyncHandler(getPaymentStatus));
 router.get("/:bookingId/ticket", validateRequest(statusSchema), asyncHandler(showBookingTicket));
 

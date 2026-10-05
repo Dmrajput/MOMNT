@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useOutletContext } from "react-router-dom";
 import usePageMeta from "../../utils/usePageMeta";
 import { useAdminAuth } from "../context/AdminAuthContext";
@@ -6,6 +6,7 @@ import ConfirmDialog from "./ConfirmDialog";
 import AdminHeader from "./AdminHeader";
 import AdminMobileNav from "./AdminMobileNav";
 import AdminSidebar from "./AdminSidebar";
+import { adminRequest } from "../services/adminService";
 
 export function useAdminChrome() {
   return useOutletContext();
@@ -17,12 +18,19 @@ export default function AdminLayout() {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [eventMode, setEventMode] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [environment, setEnvironment] = useState("");
 
   usePageMeta({
     title: "MOMNT Admin",
     description: "Internal MOMNT operations console.",
     robots: "noindex,nofollow",
   });
+
+  useEffect(() => {
+    adminRequest("/health", { session: false })
+      .then((data) => setEnvironment(data.environment || ""))
+      .catch(() => setEnvironment(""));
+  }, []);
 
   async function signOut() {
     setSigningOut(true);
@@ -46,7 +54,7 @@ export default function AdminLayout() {
         <AdminSidebar onNavigate={() => setMenuOpen(false)} onLogout={() => setConfirmLogout(true)} />
       </AdminMobileNav>
       <div className={eventMode ? "" : "md:pl-60"}>
-        {!eventMode ? <AdminHeader onMenu={() => setMenuOpen(true)} /> : null}
+        {!eventMode ? <AdminHeader onMenu={() => setMenuOpen(true)} environment={environment} /> : null}
         <main id="admin-main" className="px-4 py-6 md:px-8">
           <Outlet context={{ eventMode, setEventMode }} />
         </main>

@@ -1,12 +1,13 @@
 {
   "name": "momnt-server",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
     "seed": "node seed.js",
+    "seed:development": "node seed.js",
     "seed:admin": "node seedAdmin.js",
     "test": "node --test --test-concurrency=1"
   },

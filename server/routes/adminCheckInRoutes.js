@@ -5,6 +5,7 @@ import { adminAuth } from "../middleware/adminAuth.js";
 import { requireCsrf } from "../middleware/csrf.js";
 import { requireAccess } from "../middleware/requireRole.js";
 import { validateRequest } from "../middleware/validateRequest.js";
+import { checkInLimiter } from "../middleware/rateLimits.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { listQuery, requestSchema } from "./adminSchemas.js";
 
@@ -18,6 +19,7 @@ router.get(
 );
 router.post(
   "/validate",
+  checkInLimiter,
   adminAuth,
   requireAccess("check_in"),
   requireCsrf,

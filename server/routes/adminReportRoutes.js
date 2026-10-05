@@ -9,6 +9,7 @@ import {
   showOverview,
   showProfile,
   showRevenue,
+  showIntegrity,
   showSettings,
 } from "../controllers/adminReportController.js";
 import { adminAuth } from "../middleware/adminAuth.js";
@@ -24,6 +25,7 @@ reportRouter.get("/overview", requireAccess("reports"), validateRequest(requestS
 reportRouter.get("/events", requireAccess("reports"), asyncHandler(showEventReports));
 reportRouter.get("/revenue", requireAccess("payment_reports"), validateRequest(requestSchema({ query: listQuery })), asyncHandler(showRevenue));
 reportRouter.get("/check-ins", requireAccess("reports", "check_in"), validateRequest(requestSchema({ query: listQuery })), asyncHandler(showCheckInReport));
+reportRouter.get("/integrity", requireAccess("reports"), asyncHandler(showIntegrity));
 reportRouter.get("/export", requireAccess("reports", "payment_reports"), validateRequest(requestSchema({ query: listQuery })), asyncHandler(exportReport));
 
 const profileRouter = Router();

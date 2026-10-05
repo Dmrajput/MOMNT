@@ -4,6 +4,11 @@ import Event from "./models/Event.js";
 
 dotenv.config();
 
+if (process.env.NODE_ENV === "production" && process.env.SEED_PRODUCTION !== "1") {
+  console.error("Refusing to seed production without SEED_PRODUCTION=1. This script only upserts MOMNT #01 and does not create bookings.");
+  process.exit(1);
+}
+
 const event = {
   eventId: "momnt-01",
   slug: "premium-sunday-experience",

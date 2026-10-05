@@ -25,12 +25,24 @@ export async function adminRequest(path, { method = "GET", body, raw = false, se
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (method !== "GET" && method !== "HEAD" && csrfToken) headers["X-CSRF-Token"] = csrfToken;
 
-  const response = await fetch(`${adminBaseUrl()}${path}`, {
-    method,
-    credentials: "include",
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  let response;
+  try {
+    response = await fetch(`${adminBaseUrl()}${path}`, {
+      method,
+      credentials: "include",
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+  } catch {
+    const error = new Error("Unable to connect to MOMNT. Please try again.");
+    error.code = "NETWORK";
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (response.status === 401 && session) {
     window.dispatchEvent(new CustomEvent("momnt-admin-unauthorized"));

@@ -12,6 +12,7 @@ import { changeAdminPassword, presentAdmin, updateAdminProfile } from "../servic
 import { clearAdminCookies } from "./adminAuthController.js";
 import { recordAdminAudit } from "../utils/adminQuery.js";
 import { AppError } from "../utils/errors.js";
+import { checkDataIntegrity } from "../services/integrityService.js";
 import { accessFor } from "../utils/permissions.js";
 
 export async function showOverview(req, res) {
@@ -91,6 +92,10 @@ export async function exportReport(req, res) {
   throw new AppError("VALIDATION_ERROR", "Choose a valid export.", 400);
 }
 
+export async function showIntegrity(req, res) {
+  res.json({ success: true, integrity: await checkDataIntegrity() });
+}
+
 export function showSettings(req, res) {
   res.json({ success: true, settings: settingsView() });
 }
@@ -110,6 +115,13 @@ export async function postPassword(req, res) {
     throw new AppError("VALIDATION_ERROR", "The new passwords do not match.", 400);
   }
   await changeAdminPassword(req.admin, { currentPassword, newPassword });
+  await recordAdminAudit({
+    adminId: req.admin._id,
+    action: "PASSWORD_CHANGED",
+    resourceType: "admin",
+    resourceId: String(req.admin._id),
+    req,
+  });
   clearAdminCookies(res);
   res.json({ success: true });
 }

@@ -29,6 +29,7 @@ export default function Reports() {
   const [events, setEvents] = useState([]);
   const [report, setReport] = useState(null);
   const [rows, setRows] = useState([]);
+  const [integrity, setIntegrity] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const financial = can("reports");
@@ -46,6 +47,7 @@ export default function Reports() {
       .catch((err) => active && setError(err.message));
     if (financial) {
       adminRequest("/admin/reports/events").then((data) => active && setRows(data.data || [])).catch(() => {});
+      adminRequest("/admin/reports/integrity").then((data) => active && setIntegrity(data.integrity)).catch(() => {});
     }
     return () => {
       active = false;
@@ -98,6 +100,23 @@ export default function Reports() {
               <StatCard title="Refunded" value={formatInr(report.refundedRevenue)} />
               <StatCard title="Net Revenue" value={formatInr(report.netRevenue)} />
             </>
+          )}
+        </section>
+      ) : null}
+      {financial && integrity ? (
+        <section className="mt-8 rounded-2xl border border-border bg-card p-4">
+          <h2 className="text-sm text-text-secondary">Data integrity</h2>
+          {integrity.ok ? (
+            <p className="mt-2 text-sm">No integrity issues.</p>
+          ) : (
+            <div className="mt-2">
+              <p className="text-sm font-semibold text-warning">Data Integrity Issue</p>
+              <ul className="mt-2 space-y-1 text-sm text-text-secondary">
+                {integrity.issues.map((issue, index) => (
+                  <li key={`${issue.code}-${index}`}>{issue.code}</li>
+                ))}
+              </ul>
+            </div>
           )}
         </section>
       ) : null}
