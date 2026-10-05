@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import Button from "../ui/Button";
 import { reservePath } from "../../data/site";
+import { useAuth } from "../../context/AuthContext";
 import { classNames } from "../../utils/helpers";
 
 export default function MobileMenu({ open, onClose, links }) {
   const panelRef = useRef(null);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -108,8 +110,25 @@ export default function MobileMenu({ open, onClose, links }) {
                 ))}
               </ul>
             </nav>
+            {user ? (
+              <button
+                type="button"
+                className="mt-4 text-left text-sm font-medium text-text-secondary"
+                onClick={() => {
+                  logout();
+                  onClose();
+                }}
+              >
+                Log out
+              </button>
+            ) : (
+              <Link to="/login" onClick={onClose} className="mt-4 inline-flex text-sm font-medium text-white">
+                Login
+              </Link>
+            )}
             <Button
-              to={reservePath}
+              to={user ? reservePath : "/login"}
+              state={user ? undefined : { from: reservePath }}
               arrow
               fullWidth
               className="mt-6"

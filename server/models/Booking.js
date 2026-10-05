@@ -49,6 +49,7 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+bookingSchema.index({ "customer.email": 1, createdAt: -1 });
 bookingSchema.index({ eventId: 1 });
 bookingSchema.index({ paymentStatus: 1 });
 bookingSchema.index({ bookingStatus: 1 });

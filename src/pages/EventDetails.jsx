@@ -9,6 +9,7 @@ import GlassCard from "../components/ui/GlassCard";
 import MediaImage from "../components/ui/MediaImage";
 import ExperiencePreview from "../components/sections/ExperiencePreview";
 import { getEventBySlug } from "../data/events";
+import { useAuth } from "../context/AuthContext";
 import { useBooking } from "../context/BookingContext";
 import { formatPrice } from "../utils/helpers";
 import usePageMeta from "../utils/usePageMeta";
@@ -28,6 +29,7 @@ function InfoRow({ icon: Icon, label, value }) {
 export default function EventDetails() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { startBooking } = useBooking();
   const event = getEventBySlug(slug);
 
@@ -116,6 +118,10 @@ export default function EventDetails() {
                   arrow
                   fullWidth
                   onClick={() => {
+                    if (!user) {
+                      navigate("/login", { state: { from: `/experiences/${event.slug}` } });
+                      return;
+                    }
                     startBooking(event);
                     navigate("/booking");
                   }}

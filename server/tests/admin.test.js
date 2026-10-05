@@ -4,6 +4,7 @@ import test from "node:test";
 import mongoose from "mongoose";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
 import request from "supertest";
+import { asMember } from "./memberSession.js";
 
 process.env.NODE_ENV = "test";
 process.env.UPI_ID = "test-business@upi";
@@ -140,8 +141,10 @@ test("enforces role checks and ignores a role sent by the browser", async () => 
 });
 
 test("verifies a submitted payment, issues access, and checks in once", async () => {
-  const created = await request(app)
+  const member = await asMember(app, { name: "Raj Patel", mobile: "9876543210", email: "raj@example.com" });
+  const created = await member.agent
     .post("/api/bookings")
+    .set("X-CSRF-Token", member.csrf)
     .set("Idempotency-Key", crypto.randomUUID())
     .send({
       eventId: "momnt-01",

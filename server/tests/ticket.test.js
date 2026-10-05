@@ -4,6 +4,7 @@ import test from "node:test";
 import mongoose from "mongoose";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
 import request from "supertest";
+import { asMember } from "./memberSession.js";
 
 process.env.NODE_ENV = "test";
 process.env.UPI_ID = "test-business@upi";
@@ -12,6 +13,7 @@ process.env.UPI_DESCRIPTION = "MOMNT Event Booking";
 process.env.PAYMENT_EXPIRY_MINUTES = "30";
 process.env.CLIENT_URL = "http://localhost:5173";
 process.env.TICKET_PUBLIC_BASE_URL = "http://localhost:5173";
+process.env.JWT_SECRET = "test-member-secret-value";
 
 const { createApp } = await import("../app.js");
 const Event = (await import("../models/Event.js")).default;
@@ -31,6 +33,7 @@ const { checkInTicket } = await import("../services/checkInService.js");
 
 const app = createApp();
 let replSet;
+let member;
 
 const customer = {
   name: "Raj Patel",
@@ -71,8 +74,9 @@ async function seedEvent() {
 }
 
 async function book(quantity = 2) {
-  const response = await request(app)
+  const response = await member.agent
     .post("/api/bookings")
+    .set("X-CSRF-Token", member.csrf)
     .set("Idempotency-Key", `ticket-${crypto.randomUUID()}`)
     .send({ eventId: "momnt-01", quantity, customer, total: 1, price: 1 });
   assert.equal(response.status, 201);
@@ -104,6 +108,7 @@ test.before(async () => {
     replSet: { count: 1, storageEngine: "wiredTiger" },
   });
   await mongoose.connect(replSet.getUri());
+  member = await asMember(app, customer);
 });
 
 test.after(async () => {

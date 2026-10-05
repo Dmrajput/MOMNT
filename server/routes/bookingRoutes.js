@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
-import { getPaymentStatus, postBooking } from "../controllers/bookingController.js";
+import { getPaymentStatus, listMine, postBooking, postCancelMine } from "../controllers/bookingController.js";
 import { showBookingTicket } from "../controllers/ticketController.js";
 import { createBookingLimiter } from "../middleware/rateLimits.js";
+import { requireUserCsrf } from "../middleware/userCsrf.js";
+import { userAuth } from "../middleware/userAuth.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
@@ -33,7 +35,9 @@ const statusSchema = z.object({
   query: z.object({}).optional().default({}),
 });
 
-router.post("/", createBookingLimiter, validateRequest(createBookingSchema), asyncHandler(postBooking));
+router.get("/mine", userAuth, asyncHandler(listMine));
+router.post("/", createBookingLimiter, userAuth, requireUserCsrf, validateRequest(createBookingSchema), asyncHandler(postBooking));
+router.post("/:bookingId/cancel", userAuth, requireUserCsrf, validateRequest(statusSchema), asyncHandler(postCancelMine));
 router.get("/:bookingId/payment-status", validateRequest(statusSchema), asyncHandler(getPaymentStatus));
 router.get("/:bookingId/ticket", validateRequest(statusSchema), asyncHandler(showBookingTicket));
 

@@ -19,6 +19,21 @@ export function validateMobile(mobile) {
   return "";
 }
 
+export function validatePassword(password) {
+  const value = String(password ?? "");
+  const strong =
+    value.length >= 10 &&
+    value.length <= 128 &&
+    /[a-z]/.test(value) &&
+    /[A-Z]/.test(value) &&
+    /\d/.test(value) &&
+    /[^A-Za-z0-9]/.test(value);
+  if (!strong) {
+    return "Password must be at least 10 characters and include upper and lower case, a number, and a symbol.";
+  }
+  return "";
+}
+
 export function validateEmail(email) {
   const value = String(email ?? "").trim();
   if (!EMAIL_PATTERN.test(value)) return "Please enter a valid email address.";

@@ -3,6 +3,7 @@ import test from "node:test";
 import mongoose from "mongoose";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
 import request from "supertest";
+import { asMember } from "./memberSession.js";
 
 process.env.NODE_ENV = "test";
 process.env.UPI_ID = "test-business@upi";
@@ -10,6 +11,7 @@ process.env.UPI_NAME = "MOMNT";
 process.env.UPI_DESCRIPTION = "MOMNT Event Booking";
 process.env.PAYMENT_EXPIRY_MINUTES = "30";
 process.env.CLIENT_URL = "http://localhost:5173";
+process.env.JWT_SECRET = "test-member-secret-value";
 
 const { createApp } = await import("../app.js");
 const Event = (await import("../models/Event.js")).default;
@@ -19,6 +21,7 @@ const { verifyPayment, rejectPayment } = await import("../services/paymentServic
 
 const app = createApp();
 let replSet;
+let member;
 
 const customer = {
   name: "Raj Patel",
@@ -51,8 +54,9 @@ async function seedEvent(overrides = {}) {
 }
 
 async function book(quantity = 2, extra = {}) {
-  const response = await request(app)
+  const response = await member.agent
     .post("/api/bookings")
+    .set("X-CSRF-Token", member.csrf)
     .set("Idempotency-Key", extra.key || `book-${quantity}-${Date.now()}-${Math.random()}`)
     .send({
       eventId: "momnt-01",
@@ -70,6 +74,7 @@ test.before(async () => {
     replSet: { count: 1, storageEngine: "wiredTiger" },
   });
   await mongoose.connect(replSet.getUri());
+  member = await asMember(app, customer);
 });
 
 test.after(async () => {
@@ -93,7 +98,10 @@ test("creates a booking with a server-calculated amount", async () => {
 });
 
 test("rejects an unknown experience", async () => {
-  const response = await request(app).post("/api/bookings").send({
+  const response = await member.agent
+    .post("/api/bookings")
+    .set("X-CSRF-Token", member.csrf)
+    .send({
     eventId: "missing",
     quantity: 1,
     customer,
@@ -300,6 +308,37 @@ test("rejection keeps the booking payable and does not confirm it", async () => 
   const status = await request(app).get(`/api/bookings/${booking.bookingId}/payment-status`);
   assert.equal(status.body.paymentStatus, "failed");
   assert.match(status.body.rejectionReason, /UPI statement/);
+});
+
+test("lets a member cancel a booking before payment is approved", async () => {
+  const created = await book(1);
+  const bookingId = created.body.data.booking.bookingId;
+  const listed = await member.agent.get("/api/bookings/mine");
+  assert.equal(listed.status, 200);
+  assert.equal(listed.body.bookings.some((booking) => booking.bookingId === bookingId && booking.canCancel), true);
+  const response = await member.agent.post(`/api/bookings/${bookingId}/cancel`).set("X-CSRF-Token", member.csrf).send({});
+  assert.equal(response.status, 200);
+  assert.equal(response.body.booking.bookingStatus, "cancelled");
+  assert.equal(response.body.booking.canCancel, false);
+  const event = await Event.findOne({ eventId: "momnt-01" });
+  assert.equal(event.bookedQuantity, 0);
+});
+
+test("refuses cancellation after payment is approved", async () => {
+  const created = await book(1);
+  const bookingId = created.body.data.booking.bookingId;
+  const payment = await request(app).post("/api/payments/create").send({ bookingId });
+  const paymentId = payment.body.payment.paymentId;
+  await request(app).post(`/api/payments/${paymentId}/submit-utr`).send({
+    utr: "454545454545",
+    payerName: "Raj Patel",
+  });
+  await verifyPayment(paymentId);
+  const response = await member.agent.post(`/api/bookings/${bookingId}/cancel`).set("X-CSRF-Token", member.csrf).send({});
+  assert.equal(response.status, 409);
+  assert.equal(response.body.error.code, "BOOKING_LOCKED");
+  const booking = await Booking.findOne({ bookingId });
+  assert.equal(booking.bookingStatus, "confirmed");
 });
 
 test("admin verification routes are not public", async () => {

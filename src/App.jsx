@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { BookingProvider } from "./context/BookingContext";
 import { PaymentProvider } from "./context/PaymentContext";
 import PaymentHeader from "./components/payment/PaymentHeader";
@@ -20,6 +21,9 @@ import Payment from "./pages/Payment";
 import PaymentStatus from "./pages/PaymentStatus";
 import Ticket from "./pages/Ticket";
 import TicketValidation from "./pages/TicketValidation";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import MyBookings from "./pages/MyBookings";
 import { AdminAuthProvider, useAdminAuth } from "./admin/context/AdminAuthContext";
 import AdminLayout from "./admin/components/AdminLayout";
 import AdminLogin from "./admin/pages/AdminLogin";
@@ -90,6 +94,14 @@ function SiteLayout() {
   );
 }
 
+function RequireUser() {
+  const { user, ready } = useAuth();
+  const location = useLocation();
+  if (!ready) return <div className="min-h-screen bg-bg" />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  return <Outlet />;
+}
+
 function AdminRoot() {
   return (
     <AdminAuthProvider>
@@ -119,6 +131,7 @@ function AdminGate({ anyOf, children }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
       <BookingProvider>
         <PaymentProvider>
         <ScrollToTop />
@@ -151,8 +164,14 @@ export default function App() {
             <Route path="/experiences/:slug" element={<EventDetails />} />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route element={<RequireUser />}>
+              <Route path="/my-bookings" element={<MyBookings />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Route>
+          <Route element={<RequireUser />}>
           <Route element={<BookingLayout />}>
             <Route path="/booking" element={<Booking />} />
             <Route path="/booking/details" element={<BookingDetails />} />
@@ -163,11 +182,13 @@ export default function App() {
             <Route path="/payment" element={<Payment />} />
             <Route path="/payment/status/:bookingId" element={<PaymentStatus />} />
           </Route>
+          </Route>
           <Route path="/ticket/validate/:qrToken" element={<TicketValidation />} />
           <Route path="/ticket/:ticketId" element={<Ticket />} />
         </Routes>
         </PaymentProvider>
       </BookingProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

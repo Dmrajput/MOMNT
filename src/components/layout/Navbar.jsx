@@ -6,12 +6,13 @@ import MobileMenu from "./MobileMenu";
 import Button from "../ui/Button";
 import IconButton from "../ui/IconButton";
 import { navLinks, reservePath } from "../../data/site";
+import { useAuth } from "../../context/AuthContext";
 import { classNames } from "../../utils/helpers";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [notice, setNotice] = useState("");
+  const { user, logout } = useAuth();
   const menuButtonRef = useRef(null);
   const openRef = useRef(false);
   const location = useLocation();
@@ -32,12 +33,6 @@ export default function Navbar() {
     setOpen(false);
     menuButtonRef.current?.focus();
   }, [location.pathname]);
-
-  useEffect(() => {
-    if (!notice) return undefined;
-    const timeoutId = window.setTimeout(() => setNotice(""), 3600);
-    return () => window.clearTimeout(timeoutId);
-  }, [notice]);
 
   useEffect(() => {
     const onResize = () => {
@@ -107,26 +102,22 @@ export default function Navbar() {
         </nav>
 
         <div className="relative hidden items-center gap-6 lg:flex">
-          <button
-            type="button"
-            className="cursor-pointer text-sm font-medium text-text-secondary transition-colors hover:text-white"
-            onClick={() =>
-              setNotice("Member login opens in a later release.")
-            }
-          >
-            Login
-          </button>
-          <Button to={reservePath} size="sm" arrow>
+          {user ? (
+            <button
+              type="button"
+              className="cursor-pointer text-sm font-medium text-text-secondary transition-colors hover:text-white"
+              onClick={() => logout()}
+            >
+              {user.name.split(" ")[0]} · Log out
+            </button>
+          ) : (
+            <Link to="/login" className="text-sm font-medium text-text-secondary transition-colors hover:text-white">
+              Login
+            </Link>
+          )}
+          <Button to={user ? reservePath : "/login"} size="sm" arrow state={user ? undefined : { from: reservePath }}>
             Reserve Now
           </Button>
-          {notice ? (
-            <p
-              role="status"
-              className="absolute top-[calc(100%+8px)] right-0 z-50 w-64 rounded-[12px] border border-border bg-card px-4 py-3 text-[13px] leading-relaxed text-text-secondary shadow-lg"
-            >
-              {notice}
-            </p>
-          ) : null}
         </div>
 
         <IconButton

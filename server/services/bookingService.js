@@ -1,5 +1,6 @@
 import Booking from "../models/Booking.js";
 import Event from "../models/Event.js";
+import Payment from "../models/Payment.js";
 import { getPaymentConfig } from "../config/payment.js";
 import { AppError } from "../utils/errors.js";
 import { generateBookingId } from "../utils/generateBookingId.js";
@@ -134,6 +135,62 @@ export async function createBooking({ eventId, quantity, customer, guestNames, i
     }
     throw error;
   }
+}
+
+function canMemberCancel(booking) {
+  if (!booking) return false;
+  if (booking.paymentStatus === "paid" || booking.paymentStatus === "refunded") return false;
+  if (["confirmed", "cancelled", "refunded"].includes(booking.bookingStatus)) return false;
+  return true;
+}
+
+export async function listUserBookings(user) {
+  const bookings = await Booking.find({ "customer.email": user.email }).sort({ createdAt: -1 }).limit(50);
+  const events = await Event.find({ _id: { $in: bookings.map((booking) => booking.eventId) } });
+  const eventsById = new Map(events.map((event) => [String(event._id), event]));
+  return bookings.map((booking) => {
+    const event = eventsById.get(String(booking.eventId));
+    const view = event ? presentBooking(booking, event) : { bookingId: booking.bookingId, quantity: booking.quantity, total: booking.total, customer: booking.customer, bookingStatus: booking.bookingStatus, paymentStatus: booking.paymentStatus, createdAt: booking.createdAt };
+    return {
+      ...view,
+      guestNames: booking.guestNames || "",
+      canCancel: canMemberCancel(booking),
+    };
+  });
+}
+
+export async function cancelUserBooking(user, bookingId) {
+  const booking = await Booking.findOne({ bookingId });
+  if (!booking || booking.customer.email !== user.email) {
+    throw new AppError("NOT_FOUND", "Booking not found.", 404);
+  }
+  if (!canMemberCancel(booking)) {
+    if (booking.bookingStatus === "cancelled") {
+      const event = await Event.findById(booking.eventId);
+      return { ...presentBooking(booking, event), guestNames: booking.guestNames || "", canCancel: false };
+    }
+    throw new AppError("BOOKING_LOCKED", "This booking is approved and cannot be cancelled.", 409);
+  }
+
+  await withTransaction(async (session) => {
+    const current = session ? await Booking.findById(booking._id).session(session) : await Booking.findById(booking._id);
+    if (!current || !canMemberCancel(current)) return;
+    current.bookingStatus = "cancelled";
+    current.paymentStatus = "cancelled";
+    await current.save(session ? { session } : undefined);
+    await releaseHold(current, session);
+    if (current.paymentId) {
+      await Payment.updateOne(
+        { _id: current.paymentId, status: { $nin: ["paid", "refunded"] } },
+        { status: "cancelled" },
+        withSession(session),
+      );
+    }
+  });
+
+  const updated = await Booking.findById(booking._id);
+  const event = await Event.findById(updated.eventId);
+  return { ...presentBooking(updated, event), guestNames: updated.guestNames || "", canCancel: false };
 }
 
 export async function releaseHold(booking, session) {

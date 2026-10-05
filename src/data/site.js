@@ -8,6 +8,7 @@ export const reservePath = featured
 
 export const navLinks = [
   { to: "/", label: "Home", end: true },
+  { to: "/my-bookings", label: "Bookings" },
   { to: "/experiences", label: "Experiences" },
   { to: "/about", label: "About" },
   { to: "/faq", label: "FAQ" },

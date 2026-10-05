@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getEventById } from "../data/events";
+import { useAuth } from "./AuthContext";
 import { createBooking } from "../services/bookingService";
 import {
   calculateBookingFee,
@@ -62,6 +63,7 @@ function hydrate(draft, event) {
 }
 
 export function BookingProvider({ children }) {
+  const { user } = useAuth();
   const [state, setState] = useState(emptyState);
   const [completed, setCompleted] = useState(null);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -82,6 +84,14 @@ export function BookingProvider({ children }) {
     }
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    setState((current) => ({
+      ...current,
+      customer: { name: user.name, mobile: user.mobile, email: user.email },
+    }));
+  }, [user]);
 
   useEffect(() => {
     if (!ready || !state.event || state.status === "payment_pending") return;

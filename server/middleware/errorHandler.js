@@ -18,6 +18,17 @@ export function errorHandler(error, req, res, next) {
     return;
   }
 
+  if (error?.code === 11000 && error?.keyPattern?.email) {
+    res.status(409).json({
+      success: false,
+      error: {
+        code: "EMAIL_IN_USE",
+        message: "An account with this email already exists. Sign in instead.",
+      },
+    });
+    return;
+  }
+
   if (error?.code === 11000 && error?.keyPattern?.utr) {
     res.status(409).json({
       success: false,

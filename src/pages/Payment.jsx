@@ -41,7 +41,11 @@ export default function Payment() {
   if (!booking.ready) return null;
   if (!reference) return <Navigate to="/experiences" replace />;
 
-  if (payment?.status === "paid" || payment?.status === "verification_pending" || payment?.status === "failed") {
+  if (payment?.status === "verification_pending") {
+    return <Navigate to="/my-bookings" replace />;
+  }
+
+  if (payment?.status === "paid" || payment?.status === "failed") {
     return <Navigate to={`/payment/status/${payment.bookingId}`} replace />;
   }
 
@@ -55,8 +59,8 @@ export default function Payment() {
 
   async function handleSubmit(details) {
     try {
-      const result = await paymentState.submitUTR(payment.paymentId, details);
-      navigate(`/payment/status/${result.bookingId}`);
+      await paymentState.submitUTR(payment.paymentId, details);
+      navigate("/my-bookings");
     } catch {
       return;
     }

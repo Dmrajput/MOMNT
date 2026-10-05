@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
 import { useBooking } from "../../context/BookingContext";
 import { classNames } from "../../utils/helpers";
 import { validateBooking, validateEmail, validateMobile, validateName } from "../../utils/validation";
@@ -33,8 +34,10 @@ function Field({ id, label, error, showError, children }) {
 }
 
 export default function GuestDetailsForm({ onContinue, id = "guest-details-form" }) {
+  const { user } = useAuth();
   const { customer, guestNames, termsAccepted, setCustomer, setAttendees, setTermsAccepted } =
     useBooking();
+  const locked = Boolean(user);
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -79,6 +82,7 @@ export default function GuestDetailsForm({ onContinue, id = "guest-details-form"
             aria-invalid={show("name") || undefined}
             aria-describedby={errorId}
             placeholder="Your name"
+            readOnly={locked}
             onBlur={() => touch("name")}
             onChange={(event) => setCustomer({ name: event.target.value })}
             className={classNames(fieldClass, show("name") && "border-danger")}
@@ -103,6 +107,7 @@ export default function GuestDetailsForm({ onContinue, id = "guest-details-form"
             aria-invalid={show("mobile") || undefined}
             aria-describedby={errorId}
             placeholder="9876543210"
+            readOnly={locked}
             onBlur={() => touch("mobile")}
             onChange={(event) => setCustomer({ mobile: event.target.value })}
             className={classNames(fieldClass, show("mobile") && "border-danger")}
@@ -121,6 +126,7 @@ export default function GuestDetailsForm({ onContinue, id = "guest-details-form"
             aria-invalid={show("email") || undefined}
             aria-describedby={errorId}
             placeholder="you@email.com"
+            readOnly={locked}
             onBlur={() => touch("email")}
             onChange={(event) => setCustomer({ email: event.target.value })}
             className={classNames(fieldClass, show("email") && "border-danger")}

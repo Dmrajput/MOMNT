@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../config/api";
+import { apiBaseUrl, memberCsrf } from "./authClient";
 
 export class ApiError extends Error {
   constructor(code, message) {
@@ -12,12 +12,15 @@ export async function apiRequest(path, { method = "GET", body, headers } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   let response;
+  const csrf = memberCsrf();
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(`${apiBaseUrl()}${path}`, {
       method,
+      credentials: "include",
       headers: {
         Accept: "application/json",
         ...(body ? { "Content-Type": "application/json" } : {}),
+        ...(method !== "GET" && method !== "HEAD" && csrf ? { "X-CSRF-Token": csrf } : {}),
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
