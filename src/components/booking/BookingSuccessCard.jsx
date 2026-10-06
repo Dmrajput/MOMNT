@@ -1,6 +1,6 @@
 import { CircleCheck } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { getEventById } from "../../data/events";
+import { useEventCatalog } from "../../context/EventCatalogContext";
 import { formatPrice } from "../../utils/helpers";
 
 function Line({ label, value }) {
@@ -20,7 +20,8 @@ const STATUS_LABEL = {
 
 export default function BookingSuccessCard({ booking, accessState = "pending" }) {
   const reduce = useReducedMotion();
-  const event = getEventById(booking.eventId);
+  const { getById } = useEventCatalog();
+  const event = getById(booking.eventId);
   const confirmed = accessState === "confirmed";
 
   return (

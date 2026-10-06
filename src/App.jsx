@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { BookingProvider } from "./context/BookingContext";
+import { EventCatalogProvider } from "./context/EventCatalogContext";
 import { PaymentProvider } from "./context/PaymentContext";
 import PaymentHeader from "./components/payment/PaymentHeader";
 import Navbar from "./components/layout/Navbar";
@@ -132,6 +133,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+      <EventCatalogProvider>
       <BookingProvider>
         <PaymentProvider>
         <ScrollToTop />
@@ -188,6 +190,7 @@ export default function App() {
         </Routes>
         </PaymentProvider>
       </BookingProvider>
+      </EventCatalogProvider>
       </AuthProvider>
     </BrowserRouter>
   );

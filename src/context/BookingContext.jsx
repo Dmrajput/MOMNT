@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { getEventById } from "../data/events";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { useEventCatalog } from "./EventCatalogContext";
 import { createBooking } from "../services/bookingService";
 import {
   calculateBookingFee,
@@ -64,26 +64,52 @@ function hydrate(draft, event) {
 
 export function BookingProvider({ children }) {
   const { user } = useAuth();
+  const { events, getById, settled } = useEventCatalog();
   const [state, setState] = useState(emptyState);
   const [completed, setCompleted] = useState(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [ready, setReady] = useState(false);
+  const hydrated = useRef(false);
 
   useEffect(() => {
     const stored = getStoredBooking();
     if (stored) setCompleted(stored);
+  }, []);
 
+  useEffect(() => {
+    if (!settled || hydrated.current) return undefined;
+    hydrated.current = true;
     const draft = readDraft();
     if (draft && isDraftExpired(draft.updatedAt)) {
       clearStoredDraft();
       setSessionExpired(true);
     } else if (draft?.eventId) {
-      const event = getEventById(draft.eventId);
+      const event = getById(draft.eventId);
       if (event) setState(hydrate(draft, event));
       else clearStoredDraft();
     }
     setReady(true);
-  }, []);
+    return undefined;
+  }, [settled, getById]);
+
+  useEffect(() => {
+    if (!settled) return;
+    setState((current) => {
+      if (!current.event) return current;
+      const fresh = getById(current.event.id);
+      if (!fresh) return current;
+      const same =
+        fresh.title === current.event.title &&
+        fresh.price === current.event.price &&
+        fresh.date === current.event.date &&
+        fresh.time === current.event.time &&
+        fresh.location === current.event.location &&
+        fresh.capacity === current.event.capacity &&
+        fresh.description === current.event.description;
+      if (same) return current;
+      return { ...current, event: fresh, quantity: clampQuantity(current.quantity, fresh) };
+    });
+  }, [settled, events, getById]);
 
   useEffect(() => {
     if (!user) return;

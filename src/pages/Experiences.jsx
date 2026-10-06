@@ -3,12 +3,14 @@ import PageTransition from "../components/layout/PageTransition";
 import Container from "../components/layout/Container";
 import SectionHeading from "../components/ui/SectionHeading";
 import EventCard from "../components/ui/EventCard";
-import events, { experienceFilters } from "../data/events";
+import { experienceFilters } from "../data/events";
+import { useEventCatalog } from "../context/EventCatalogContext";
 import { classNames, eventMatchesFilter } from "../utils/helpers";
 import usePageMeta from "../utils/usePageMeta";
 
 export default function Experiences() {
   const [filter, setFilter] = useState("All");
+  const { events, settled } = useEventCatalog();
   const visible = events.filter((event) => eventMatchesFilter(event, filter));
 
   usePageMeta({
@@ -52,7 +54,14 @@ export default function Experiences() {
           })}
         </div>
 
-        {visible.length ? (
+        {!settled && !events.length ? (
+          <p className="mt-10 text-text-secondary">Loading experiences...</p>
+        ) : null}
+        {settled && !events.length ? (
+          <p className="mt-10 max-w-md text-text-secondary" role="status">
+            Event coming soon. No experience is live right now.
+          </p>
+        ) : visible.length ? (
           <ul
             className={classNames(
               "mt-10 grid gap-6",

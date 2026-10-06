@@ -10,6 +10,7 @@ import { requestContext } from "./middleware/requestContext.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import eventRoutes from "./routes/eventRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
 
@@ -60,6 +61,7 @@ export function createApp() {
   app.get("/api/health/live", showLive);
   app.get("/api/health/ready", showReady);
   app.get("/api/health", showHealth);
+  app.use("/api/events", eventRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/bookings", bookingRoutes);
   app.use("/api/payments", paymentRoutes);

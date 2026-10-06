@@ -4,11 +4,14 @@ import { Link, NavLink } from "react-router-dom";
 import Button from "../ui/Button";
 import { reservePath } from "../../data/site";
 import { useAuth } from "../../context/AuthContext";
+import { useEventCatalog } from "../../context/EventCatalogContext";
 import { classNames } from "../../utils/helpers";
 
 export default function MobileMenu({ open, onClose, links }) {
   const panelRef = useRef(null);
   const { user, logout } = useAuth();
+  const { featured, settled } = useEventCatalog();
+  const reserveTo = featured ? `/experiences/${featured.slug}` : settled ? "/" : reservePath;
 
   useEffect(() => {
     if (!open) return undefined;
@@ -127,8 +130,8 @@ export default function MobileMenu({ open, onClose, links }) {
               </Link>
             )}
             <Button
-              to={user ? reservePath : "/login"}
-              state={user ? undefined : { from: reservePath }}
+              to={user ? reserveTo : "/login"}
+              state={user ? undefined : { from: reserveTo }}
               arrow
               fullWidth
               className="mt-6"

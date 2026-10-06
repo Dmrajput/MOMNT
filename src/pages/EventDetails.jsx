@@ -8,8 +8,8 @@ import Divider from "../components/ui/Divider";
 import GlassCard from "../components/ui/GlassCard";
 import MediaImage from "../components/ui/MediaImage";
 import ExperiencePreview from "../components/sections/ExperiencePreview";
-import { getEventBySlug } from "../data/events";
 import { useAuth } from "../context/AuthContext";
+import { useEventCatalog } from "../context/EventCatalogContext";
 import { useBooking } from "../context/BookingContext";
 import { formatPrice } from "../utils/helpers";
 import usePageMeta from "../utils/usePageMeta";
@@ -31,7 +31,8 @@ export default function EventDetails() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { startBooking } = useBooking();
-  const event = getEventBySlug(slug);
+  const { getBySlug, settled } = useEventCatalog();
+  const event = getBySlug(slug);
 
   usePageMeta({
     title: event ? `${event.title} — MOMNT` : "Experience not found — MOMNT",
@@ -40,6 +41,16 @@ export default function EventDetails() {
       "This MOMNT experience could not be found.",
     image: event?.image,
   });
+
+  if (!event && !settled) {
+    return (
+      <PageTransition>
+        <Container className="py-24">
+          <p className="text-text-secondary">Loading this experience...</p>
+        </Container>
+      </PageTransition>
+    );
+  }
 
   if (!event) {
     return (
@@ -117,7 +128,9 @@ export default function EventDetails() {
                   size="lg"
                   arrow
                   fullWidth
+                  disabled={!event.bookable}
                   onClick={() => {
+                    if (!event.bookable) return;
                     if (!user) {
                       navigate("/login", { state: { from: `/experiences/${event.slug}` } });
                       return;
@@ -126,7 +139,7 @@ export default function EventDetails() {
                     navigate("/booking");
                   }}
                 >
-                  Reserve Your MOMNT
+                  {event.bookable ? "Reserve Your MOMNT" : "Sold Out"}
                 </Button>
               </div>
             </div>
@@ -163,7 +176,7 @@ export default function EventDetails() {
               About the experience
             </h2>
             <div className="mt-6 max-w-2xl space-y-4">
-              {event.about.map((paragraph) => (
+              {(event.about || []).map((paragraph) => (
                 <p key={paragraph} className="leading-relaxed text-text-secondary">
                   {paragraph}
                 </p>
@@ -183,6 +196,7 @@ export default function EventDetails() {
             </div>
           </section>
 
+          {event.schedule?.length ? (
           <section aria-labelledby="schedule" className="mt-16">
             <h2
               id="schedule"
@@ -205,6 +219,7 @@ export default function EventDetails() {
               ))}
             </ol>
           </section>
+          ) : null}
         </Container>
       </article>
     </PageTransition>

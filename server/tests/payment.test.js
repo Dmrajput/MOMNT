@@ -341,6 +341,44 @@ test("refuses cancellation after payment is approved", async () => {
   assert.equal(booking.bookingStatus, "confirmed");
 });
 
+test("public catalog returns published event updates and hides drafts", async () => {
+  await seedEvent({
+    title: "Updated Sunday",
+    price: 4500,
+    description: "New copy from the admin.",
+    location: "Surat",
+    startTime: "12:00 PM",
+    endTime: "5:00 PM",
+  });
+  await Event.create({
+    eventId: "momnt-draft",
+    slug: "hidden-draft",
+    number: "MOMNT #02",
+    title: "Hidden",
+    location: "Ahmedabad",
+    date: new Date("2026-11-01T00:00:00+05:30"),
+    startTime: "11:00 AM",
+    endTime: "4:00 PM",
+    price: 1000,
+    capacity: 10,
+    status: "draft",
+  });
+  const response = await request(app).get("/api/events");
+  assert.equal(response.status, 200);
+  assert.equal(response.body.events.length, 1);
+  assert.equal(response.body.events[0].id, "momnt-01");
+  assert.equal(response.body.events[0].title, "Updated Sunday");
+  assert.equal(response.body.events[0].price, 4500);
+  assert.equal(response.body.events[0].location, "Surat");
+  assert.equal(response.body.events[0].time, "12:00 PM – 5:00 PM");
+  assert.equal(response.body.events[0].description, "New copy from the admin.");
+  const one = await request(app).get("/api/events/premium-sunday-experience");
+  assert.equal(one.status, 200);
+  assert.equal(one.body.event.title, "Updated Sunday");
+  const hidden = await request(app).get("/api/events/hidden-draft");
+  assert.equal(hidden.status, 404);
+});
+
 test("admin verification routes are not public", async () => {
   const verify = await request(app).post("/api/admin/payments/PAY-20261004-0001/verify").send({ status: "paid" });
   const reject = await request(app).post("/api/admin/payments/PAY-20261004-0001/reject").send({ status: "paid" });

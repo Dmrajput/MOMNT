@@ -6,6 +6,7 @@ import MobileMenu from "./MobileMenu";
 import Button from "../ui/Button";
 import IconButton from "../ui/IconButton";
 import { navLinks, reservePath } from "../../data/site";
+import { useEventCatalog } from "../../context/EventCatalogContext";
 import { useAuth } from "../../context/AuthContext";
 import { classNames } from "../../utils/helpers";
 
@@ -13,6 +14,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { featured, settled } = useEventCatalog();
+  const reserveTo = featured ? `/experiences/${featured.slug}` : settled ? "/" : reservePath;
   const menuButtonRef = useRef(null);
   const openRef = useRef(false);
   const location = useLocation();
@@ -115,7 +118,7 @@ export default function Navbar() {
               Login
             </Link>
           )}
-          <Button to={user ? reservePath : "/login"} size="sm" arrow state={user ? undefined : { from: reservePath }}>
+          <Button to={user ? reserveTo : "/login"} size="sm" arrow state={user ? undefined : { from: reserveTo }}>
             Reserve Now
           </Button>
         </div>

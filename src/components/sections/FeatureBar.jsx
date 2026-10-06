@@ -2,14 +2,16 @@ import { motion, useReducedMotion } from "framer-motion";
 import Container from "../layout/Container";
 import FeatureIcon from "../ui/FeatureIcon";
 import { experienceFeatures } from "../../data/features";
-import { getFeaturedEvent } from "../../data/events";
+import { useEventCatalog } from "../../context/EventCatalogContext";
 
 export default function FeatureBar() {
   const reduce = useReducedMotion();
-  const event = getFeaturedEvent();
+  const { featured: event } = useEventCatalog();
   const features = experienceFeatures.filter((feature) =>
-    event?.inclusions.includes(feature.title),
+    event?.inclusions?.includes(feature.title),
   );
+
+  if (!features.length) return null;
 
   return (
     <section aria-labelledby="included-heading" className="pb-[60px] lg:pb-20">
