@@ -144,6 +144,11 @@ function canMemberCancel(booking) {
   return true;
 }
 
+function canMemberPay(booking) {
+  if (!booking || !canMemberCancel(booking)) return false;
+  return booking.paymentStatus === "pending" || booking.paymentStatus === "payment_initiated";
+}
+
 export async function listUserBookings(user) {
   const bookings = await Booking.find({ "customer.email": user.email }).sort({ createdAt: -1 }).limit(50);
   const events = await Event.find({ _id: { $in: bookings.map((booking) => booking.eventId) } });
@@ -155,6 +160,7 @@ export async function listUserBookings(user) {
       ...view,
       guestNames: booking.guestNames || "",
       canCancel: canMemberCancel(booking),
+      canPay: canMemberPay(booking),
     };
   });
 }
@@ -167,7 +173,7 @@ export async function cancelUserBooking(user, bookingId) {
   if (!canMemberCancel(booking)) {
     if (booking.bookingStatus === "cancelled") {
       const event = await Event.findById(booking.eventId);
-      return { ...presentBooking(booking, event), guestNames: booking.guestNames || "", canCancel: false };
+      return { ...presentBooking(booking, event), guestNames: booking.guestNames || "", canCancel: false, canPay: false };
     }
     throw new AppError("BOOKING_LOCKED", "This booking is approved and cannot be cancelled.", 409);
   }
@@ -190,7 +196,7 @@ export async function cancelUserBooking(user, bookingId) {
 
   const updated = await Booking.findById(booking._id);
   const event = await Event.findById(updated.eventId);
-  return { ...presentBooking(updated, event), guestNames: updated.guestNames || "", canCancel: false };
+  return { ...presentBooking(updated, event), guestNames: updated.guestNames || "", canCancel: false, canPay: false };
 }
 
 export async function releaseHold(booking, session) {

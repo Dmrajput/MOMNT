@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import PaymentAmountCard from "../components/payment/PaymentAmountCard";
 import PaymentEventCard from "../components/payment/PaymentEventCard";
@@ -13,19 +13,23 @@ import { useBooking } from "../context/BookingContext";
 import { usePayment } from "../context/PaymentContext";
 import usePageMeta from "../utils/usePageMeta";
 
-function referenceFrom(booking) {
-  return booking.completed?.bookingId || booking.bookingId || localStorage.getItem(BOOKING_REF_KEY) || "";
+function referenceFrom(booking, requestedId) {
+  return requestedId || booking.completed?.bookingId || booking.bookingId || localStorage.getItem(BOOKING_REF_KEY) || "";
 }
 
 export default function Payment() {
   const navigate = useNavigate();
+  const location = useLocation();
   const booking = useBooking();
   const paymentState = usePayment();
   const reduce = useReducedMotion();
-  const reference = booking.ready ? referenceFrom(booking) : "";
+  const requestedId = location.state?.bookingId || "";
+  const reference = booking.ready ? referenceFrom(booking, requestedId) : "";
   const startedFor = useRef("");
-  const timer = usePaymentTimer(paymentState.expiresAt);
-  const payment = paymentState.payment;
+  const payment = paymentState.payment?.bookingId === reference ? paymentState.payment : null;
+  const timer = usePaymentTimer(payment?.expiresAt || null);
+  const stalePayment = Boolean(paymentState.payment && paymentState.payment.bookingId !== reference);
+  const relevantError = stalePayment ? null : paymentState.error;
 
   usePageMeta({
     title: "Complete Your Payment — MOMNT",
@@ -35,6 +39,8 @@ export default function Payment() {
   useEffect(() => {
     if (!reference || startedFor.current === reference) return;
     startedFor.current = reference;
+    localStorage.setItem(BOOKING_REF_KEY, reference);
+    paymentState.resetPayment();
     paymentState.initializePayment(reference);
   }, [reference, paymentState]);
 
@@ -49,8 +55,8 @@ export default function Payment() {
     return <Navigate to={`/payment/status/${payment.bookingId}`} replace />;
   }
 
-  const expired = timer.expired || paymentState.error?.code === "PAYMENT_EXPIRED" || paymentState.error?.code === "BOOKING_EXPIRED";
-  const blocked = Boolean(paymentState.error) && !payment;
+  const expired = timer.expired || relevantError?.code === "PAYMENT_EXPIRED" || relevantError?.code === "BOOKING_EXPIRED";
+  const blocked = Boolean(relevantError) && !payment;
 
   function openUpiApp() {
     if (!payment?.upiIntentUrl || expired) return;
@@ -79,17 +85,17 @@ export default function Payment() {
         Secure your MOMNT by completing the payment below.
       </p>
 
-      {paymentState.loading && !payment ? (
+      {!payment && !blocked ? (
         <div className="mt-8 h-64 animate-pulse rounded-[16px] border border-border bg-card" />
       ) : null}
 
       {blocked ? (
         <div className="mt-8 max-w-xl rounded-[16px] border border-border bg-card p-6">
           <h2 className="text-2xl font-semibold text-white">
-            {expired ? "Payment Session Expired" : paymentState.error?.code === "BOOKING_NOT_FOUND" ? "Booking not found." : "Something went wrong."}
+            {expired ? "Payment Session Expired" : relevantError?.code === "BOOKING_NOT_FOUND" ? "Booking not found." : "Something went wrong."}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-            {paymentState.error?.message || "Something went wrong. Please try again."}
+            {relevantError?.message || "Something went wrong. Please try again."}
           </p>
           <Button to="/experiences/premium-sunday-experience" className="mt-6">
             Return to Booking
@@ -101,7 +107,7 @@ export default function Payment() {
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="order-1 flex flex-col gap-6 lg:order-2">
             <PaymentEventCard event={payment.event} />
-            <PaymentAmountCard amount={payment.amount} quantity={booking.completed?.quantity} />
+            <PaymentAmountCard amount={payment.amount} quantity={location.state?.quantity || booking.completed?.quantity} />
           </div>
           <div className="order-2 flex flex-col gap-6 lg:order-1">
             <PaymentTimer label={timer.label} expired={expired} />
@@ -124,9 +130,9 @@ export default function Payment() {
               loading={paymentState.loading}
               onSubmit={handleSubmit}
             />
-            {paymentState.error && payment ? (
+            {relevantError && payment ? (
               <p role="alert" className="text-sm text-danger">
-                {paymentState.error.message}
+                {relevantError.message}
               </p>
             ) : null}
           </div>

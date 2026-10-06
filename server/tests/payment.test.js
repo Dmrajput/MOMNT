@@ -310,6 +310,24 @@ test("rejection keeps the booking payable and does not confirm it", async () => 
   assert.match(status.body.rejectionReason, /UPI statement/);
 });
 
+test("offers payment until the UTR is submitted", async () => {
+  const created = await book(1);
+  const bookingId = created.body.data.booking.bookingId;
+  const unpaid = await member.agent.get("/api/bookings/mine");
+  assert.equal(unpaid.body.bookings.find((booking) => booking.bookingId === bookingId).canPay, true);
+  const payment = await request(app).post("/api/payments/create").send({ bookingId });
+  const started = await member.agent.get("/api/bookings/mine");
+  assert.equal(started.body.bookings.find((booking) => booking.bookingId === bookingId).canPay, true);
+  await request(app).post(`/api/payments/${payment.body.payment.paymentId}/submit-utr`).send({
+    utr: "121212121212",
+    payerName: "Raj Patel",
+  });
+  const submitted = await member.agent.get("/api/bookings/mine");
+  const row = submitted.body.bookings.find((booking) => booking.bookingId === bookingId);
+  assert.equal(row.paymentStatus, "verification_pending");
+  assert.equal(row.canPay, false);
+});
+
 test("lets a member cancel a booking before payment is approved", async () => {
   const created = await book(1);
   const bookingId = created.body.data.booking.bookingId;

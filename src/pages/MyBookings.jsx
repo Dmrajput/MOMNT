@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Container from "../components/layout/Container";
+import Button from "../components/ui/Button";
 import { apiRequest } from "../services/apiClient";
 import { formatPrice } from "../utils/helpers";
 import usePageMeta from "../utils/usePageMeta";
@@ -137,7 +138,12 @@ export default function MyBookings() {
                 </div>
               ) : null}
             </dl>
-            <div className="mt-5">
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              {booking.canPay ? (
+                <Button to="/payment" state={{ bookingId: booking.bookingId, quantity: booking.quantity }} size="sm" arrow>
+                  Complete payment
+                </Button>
+              ) : null}
               {booking.canCancel ? (
                 pendingId === booking.bookingId ? (
                   <div className="flex flex-wrap gap-2">
