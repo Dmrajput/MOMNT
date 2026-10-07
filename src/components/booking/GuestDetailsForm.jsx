@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useBooking } from "../../context/BookingContext";
@@ -166,13 +167,13 @@ export default function GuestDetailsForm({ onContinue, id = "guest-details-form"
           />
           <span>
             I agree to the{" "}
-            <a href="#terms" className="text-white underline underline-offset-4">
+            <Link to="/terms" className="text-white underline underline-offset-4">
               Terms & Conditions
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a href="#refund" className="text-white underline underline-offset-4">
+            <Link to="/refund" className="text-white underline underline-offset-4">
               Refund Policy
-            </a>
+            </Link>
             .
           </span>
         </label>

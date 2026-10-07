@@ -17,12 +17,12 @@ export const navLinks = [
 export const footerLinks = navLinks.filter((link) => link.to !== "/");
 
 export const socialLinks = [
-  { href: "#instagram", label: "Instagram" },
-  { href: "#facebook", label: "Facebook" },
+  { href: "https://www.instagram.com/themomntclub", label: "Instagram" },
+  { href: "https://wa.me/919979130402", label: "WhatsApp" },
 ];
 
 export const legalLinks = [
-  { href: "#privacy", label: "Privacy Policy" },
-  { href: "#terms", label: "Terms & Conditions" },
-  { href: "#refund", label: "Refund Policy" },
+  { to: "/privacy", label: "Privacy Policy" },
+  { to: "/terms", label: "Terms & Conditions" },
+  { to: "/refund", label: "Refund Policy" },
 ];

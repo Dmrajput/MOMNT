@@ -39,7 +39,7 @@ const faqs = [
     id: "cancellation",
     question: "What is the cancellation policy?",
     answer:
-      "A cancellation and refund policy will be published before reservations open. This site does not collect payment yet.",
+      "You can cancel on your bookings page before the payment is approved. After a payment is approved, a refund returns 70% of the amount paid and MOMNT keeps 30%.",
   },
 ];
 

@@ -2,17 +2,7 @@ import { Link } from "react-router-dom";
 import Container from "./Container";
 import { footerLinks, legalLinks, socialLinks } from "../../data/site";
 
-function PlaceholderLink({ href, children }) {
-  return (
-    <a
-      href={href}
-      className="text-sm text-text-secondary transition-colors hover:text-white"
-      onClick={(event) => event.preventDefault()}
-    >
-      {children}
-    </a>
-  );
-}
+const quietLink = "text-sm text-text-secondary transition-colors hover:text-white";
 
 export default function Footer() {
   return (
@@ -29,10 +19,7 @@ export default function Footer() {
           <ul className="flex flex-col gap-3">
             {footerLinks.map((link) => (
               <li key={link.to}>
-                <Link
-                  to={link.to}
-                  className="text-sm text-text-secondary transition-colors hover:text-white"
-                >
+                <Link to={link.to} className={quietLink}>
                   {link.label}
                 </Link>
               </li>
@@ -43,15 +30,19 @@ export default function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-1">
           <ul className="flex flex-col gap-3" aria-label="Social">
             {socialLinks.map((link) => (
-              <li key={link.href}>
-                <PlaceholderLink href={link.href}>{link.label}</PlaceholderLink>
+              <li key={link.label}>
+                <a href={link.href} target="_blank" rel="noopener noreferrer" className={quietLink}>
+                  {link.label}
+                </a>
               </li>
             ))}
           </ul>
           <ul className="flex flex-col gap-3">
             {legalLinks.map((link) => (
-              <li key={link.href}>
-                <PlaceholderLink href={link.href}>{link.label}</PlaceholderLink>
+              <li key={link.to}>
+                <Link to={link.to} className={quietLink}>
+                  {link.label}
+                </Link>
               </li>
             ))}
           </ul>

@@ -13,6 +13,9 @@ import Experiences from "./pages/Experiences";
 import EventDetails from "./pages/EventDetails";
 import About from "./pages/About";
 import FAQ from "./pages/FAQ";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Refund from "./pages/Refund";
 import NotFound from "./pages/NotFound";
 import Booking from "./pages/Booking";
 import BookingDetails from "./pages/BookingDetails";
@@ -166,6 +169,9 @@ export default function App() {
             <Route path="/experiences/:slug" element={<EventDetails />} />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/refund" element={<Refund />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route element={<RequireUser />}>
